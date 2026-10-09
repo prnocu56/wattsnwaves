@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#070a12">
+<title>Watt's n Waves</title>
+<style>
+:root{
+  --bg:#070a12;--panel:#101827;--panel2:#0b1220;--line:#31425f;
+  --text:#edf2ff;--muted:#9caaca;--cyan:#70d9ff;--gold:#ffc95d;
+  --red:#ff5969;--green:#6ee7a4;--violet:#a98bff;--pink:#ff72c3;
+  --button-scale:.82;--ui-font:"Arial Black","Trebuchet MS",Impact,system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;animation:none!important;transition:none!important}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070d;color:var(--text);font-family:var(--ui-font)}
+body{display:flex;align-items:center;justify-content:center}h1,.menuTitle{font-family:"Arial Black","Trebuchet MS",system-ui,sans-serif}
+button,input{font:inherit}
+button{touch-action:manipulation}
+#game{position:relative;width:100%;height:100%;max-width:560px;overflow:hidden;background:#060812}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+#hud{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 10px) 12px 0;z-index:8;pointer-events:none}
+.hudTop{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;font-size:13px;font-weight:900;letter-spacing:.6px;text-shadow:0 2px 4px #000}
+.bar{position:relative;height:18px;border-radius:999px;background:#121a2b;border:1px solid #34435e;overflow:hidden;box-shadow:inset 0 0 10px #000}
+.fill{position:absolute;inset:0 auto 0 0;width:0;height:100%}
+#hpFill{background:#d83b4d}
+#manaFill{background:#297eae}
+.barLabel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 3px #000}
+#bossWrap{display:none;margin-top:8px}
+#bossFill{background:#a44cff}
+.controls{position:absolute;inset:0;z-index:10;pointer-events:none}
+#joyBase{position:absolute;left:20px;bottom:calc(env(safe-area-inset-bottom) + 22px);width:132px;height:132px;border-radius:50%;
+background:#132038aa;border:2px solid #58749e88;box-shadow:inset 0 0 24px #000;pointer-events:auto;touch-action:none}
+#joyKnob{position:absolute;left:38px;top:38px;width:56px;height:56px;border-radius:50%;background:#5a9fc5;box-shadow:inset 0 2px 5px #fff6;pointer-events:none}
+.btn{position:absolute;border:none;border-radius:50%;color:#fff;font-weight:900;pointer-events:auto;display:flex;align-items:center;justify-content:center;
+user-select:none;box-shadow:0 7px 0 #050811aa,0 0 18px #0008;font-size:12px;letter-spacing:.4px}
+#attack{right:22px;bottom:calc(env(safe-area-inset-bottom) + 28px);width:84px;height:84px;transform:scale(var(--button-scale));background:#c12a68}
+#dash{right:118px;bottom:calc(env(safe-area-inset-bottom) + 22px);width:60px;height:60px;transform:scale(var(--button-scale));background:#217e9d}
+#special{right:27px;bottom:calc(env(safe-area-inset-bottom) + 126px);width:64px;height:64px;transform:scale(var(--button-scale));background:#a06a20}
+.mainBtn{
+ width:min(100%,340px);
+ padding:14px 18px;
+ margin:8px;
+ transform:scale(var(--menu-button-scale,1));
+ transform-origin:center;
+ border:1px solid #6fdcff;
+ border-radius:14px;
+ background:linear-gradient(180deg,#1a3854 0%,#102238 100%);
+ color:#f5fbff;
+ font-family:var(--ui-font);
+ font-weight:900;
+ font-size:16px;
+ letter-spacing:.8px;
+ text-shadow:0 0 8px rgba(112,217,255,.75);
+ box-shadow:0 0 8px rgba(112,217,255,.42),0 0 20px rgba(112,217,255,.20),inset 0 0 12px rgba(112,217,255,.12);
+}.mainBtn:active{
+ background:linear-gradient(135deg,#42bde8 0%,#1c78a1 45%,#16496a 100%);
+ box-shadow:
+   0 0 8px #a8efff,
+   0 0 20px rgba(112,217,255,1),
+   0 0 42px rgba(112,217,255,.78),
+   0 0 70px rgba(112,217,255,.45),
+   inset 0 2px 14px rgba(255,255,255,.38),
+   inset 0 -8px 18px rgba(0,0,0,.18);
+}
+.mainBtn{
+ width:min(100%,340px);
+ padding:14px 18px;
+ margin:6px;
+ transform:scale(var(--menu-button-scale,1));
+ transform-origin:center;
+ border:1px solid var(--line);
+ border-radius:12px;
+ background:var(--panel);
+ color:var(--text);
+ font-family:var(--ui-font);
+ font-weight:900;
+ font-size:16px;
+ box-shadow:0 0 7px rgba(112,217,255,.22);
+}
+.mainBtn::before{
+ content:"";
+ position:absolute;
+ left:10%;
+ right:10%;
+ top:3px;
+ height:2px;
+ border-radius:99px;
+ background:rgba(255,255,255,.72);
+ box-shadow:0 0 8px rgba(255,255,255,.8);
+ pointer-events:none;
+}
+
+
+#menu .mainBtn,#how .mainBtn,#over .mainBtn,#pause .mainBtn,#upgrade .mainBtn,#visitor .mainBtn{
+ width:min(100%,340px);
+ padding:14px 18px;
+ margin:8px;
+ transform:scale(var(--menu-button-scale,1));
+ transform-origin:center;
+ border:2px solid #8fe7ff;
+ border-radius:14px;
+ background:linear-gradient(135deg,#237da5 0%,#15516f 45%,#102d45 100%);
+ color:#f5fbff;
+ font-family:var(--ui-font);
+ font-weight:900;
+ font-size:16px;
+ letter-spacing:.8px;
+ text-shadow:none;
+ box-shadow:
+   0 0 5px #70d9ff,
+   0 0 14px rgba(112,217,255,.85),
+   0 0 30px rgba(112,217,255,.55),
+   0 0 55px rgba(112,217,255,.28),
+   inset 0 2px 10px rgba(255,255,255,.28),
+   inset 0 -8px 18px rgba(0,0,0,.24);
+}
+
+#pauseBtn{position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:25;width:42px;height:42px;border-radius:12px;border:1px solid #4a6084;background:#0c1424;color:#eef;font-size:17px;font-weight:900;pointer-events:auto}
+.screen{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;
+padding:28px 20px calc(env(safe-area-inset-bottom) + 24px);background:rgba(5,8,15,.96);text-align:center}
+.hidden{display:none!important}
+h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(39px,12vw,65px);line-height:.95;letter-spacing:-2px;color:#f1f4ff;text-shadow:none}
+.menuTitle{color:#f6d27a}
+.subtitle{margin:13px 0 22px;color:#bcc8dc;max-width:430px;line-height:1.45;font-size:14px}
+.kicker{font-size:12px;color:#aebbd0;letter-spacing:2px;font-weight:900;margin-bottom:10px}
+.mainBtn{width:min(100%,340px);padding:14px 18px;margin:6px;border:1px solid #465977;border-radius:16px;background:#18243a;color:#eef3ff;font-size:17px;font-weight:900;box-shadow:0 6px 0 #05081188}
+.mainBtn.primary{background:#245d80}
+.mainBtn.gold{background:#765a1f}
+.mainBtn.violet{background:#4e3f78}
+.mainBtn.green{background:#245c48}
+.cards{width:100%;max-width:470px;display:grid;grid-template-columns:1fr;gap:10px;padding:4px;overflow:visible}
+.card{width:100%;text-align:left;border:1px solid #3c506f;border-radius:15px;padding:14px;background:#10192a;color:#f3f5ff;box-shadow:0 5px 16px #0006}
+.card b{display:block;font-size:16px;margin-bottom:5px;color:#e9f0ff}
+.card span{font-size:12px;color:#b4c0d6;line-height:1.4}
+.scrollScreen{justify-content:flex-start!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;padding-top:calc(env(safe-area-inset-top) + 78px)!important;padding-bottom:24px!important}
+.scrollScreen .cards,.scrollScreen .card,.scrollScreen h1,.scrollScreen p{touch-action:pan-y!important}
+.metaClose{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:12px;width:50px;height:50px;border:1px solid #53698c;border-radius:14px;background:#111b2d;color:#fff;font-size:34px;line-height:1;font-weight:400;z-index:100;border-bottom:3px solid #31415f;box-shadow:0 6px 18px #0008}
+.settingsBox{width:min(100%,450px);background:#0d1525;border:1px solid #3b506f;border-radius:18px;padding:15px;text-align:left}
+.settingsRow{padding:11px 0;border-bottom:1px solid #24344e}
+.settingsRow:last-child{border-bottom:0}
+.settingsRow label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:900}
+.settingsRow small{display:block;color:#9eacc1;font-size:12px;line-height:1.4;margin-top:5px}
+.range{width:100%;accent-color:#67bfe4}
+.switch{width:22px;height:22px;accent-color:#67bfe4}
+.preview{width:80px;height:80px;border-radius:18px;object-fit:cover;border:1px solid #445a7c;background:#111b2d}
+#toast{position:absolute;z-index:19;top:24%;left:50%;transform:translateX(-50%);font-size:20px;font-weight:900;letter-spacing:.8px;color:#f5f7ff;text-shadow:0 2px 4px #000;pointer-events:none;opacity:0}
+#tutorialPanel{position:absolute;z-index:17;left:50%;top:calc(env(safe-area-inset-top) + 58px);transform:translateX(-50%);width:min(92%,430px);padding:10px 13px;border:1px solid #536b88;border-radius:12px;background:#0a1220e8;color:#e8eef8;text-align:center;pointer-events:none}
+#combo{display:none!important}
+#over .stats,#pause .stats{color:#c0ccdf;line-height:1.7}
+.pausePanel{width:min(100%,440px);background:#0d1524;border:1px solid #3f5576;border-radius:18px;padding:14px;text-align:left}
+.pauseHeader{display:flex;justify-content:space-between;gap:12px;font-weight:900;margin-bottom:8px}
+.pauseBuild{max-height:34vh;overflow:auto;border-top:1px solid #273850;border-bottom:1px solid #273850;padding:10px 2px;margin:8px 0}
+@media (max-height:620px){
+  #joyBase{width:110px;height:110px}#joyKnob{left:31px;top:31px;width:48px;height:48px}
+  #attack{width:74px;height:74px}#special{bottom:110px}
+}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="hudTop"><span id="zoneTxt">Neon Cave</span><span id="waveTxt">Wave 1</span></div>
+  <div class="bar"><div id="hpFill" class="fill"></div><span id="hpLabel" class="barLabel">50 / 50</span></div>
+  <div class="bar" style="height:16px;margin-top:7px"><div id="manaFill" class="fill"></div><span id="manaLabel" class="barLabel">0 / 55</span></div>
+  <div id="bossWrap"><div class="hudTop"><span id="bossName">BOSS</span><span id="bossLabel"></span></div><div class="bar" style="height:16px"><div id="bossFill" class="fill"></div></div></div>
+</div>
+
+<button id="pauseBtn" class="hidden" aria-label="Pause">Ⅱ</button>
+<div id="toast"></div>
+
+<div id="controls" class="controls hidden">
+  <div id="joyBase"><div id="joyKnob"></div></div>
+  <button id="attack" class="btn">ATTACK</button>
+  <button id="dash" class="btn">DASH</button>
+  <button id="special" class="btn">NOVA</button>
+</div>
+
+<div id="tutorialPanel" class="hidden">
+  <b id="tutorialStepTitle">Movement</b><br><span id="tutorialStepText">Use the joystick.</span>
+</div>
+
+<div id="menu" class="screen">
+  <h1 class="menuTitle">WATT'S N<br>WAVES</h1>
+  <button id="startBtn" class="mainBtn primary">START RUN</button>
+  <button id="howBtn" class="mainBtn">TUTORIAL</button>
+  <button id="shopBtn" class="mainBtn gold">SHOP</button>
+  <button id="dexBtn" class="mainBtn">POWER DEX</button>
+  <button id="achievementBtn" class="mainBtn violet">ACHIEVEMENTS</button>
+  <button id="settingsBtn" class="mainBtn green">ADJUST WATT</button>
+  <div class="small" id="bestTxt">Best Wave: 0</div>
+</div>
+
+<div id="how" class="screen hidden">
+  <button class="metaClose" data-close="how">×</button>
+  <h1 style="font-size:42px">TUTORIAL</h1>
+  <p class="subtitle">Play a real practice run. Follow the instructions while the game runs normally.</p>
+  <button id="tutorialStart" class="mainBtn primary">START TUTORIAL</button>
+</div>
+
+<div id="upgrade" class="screen hidden">
+  <h1 style="font-size:42px">CHOOSE A POWER</h1>
+  <p class="subtitle" style="margin-bottom:8px">The same power can level up. Higher levels use higher rarities.</p>
+  <div id="upgradeCards" class="cards"></div>
+</div>
+
+<div id="pause" class="screen hidden">
+  <h1 style="font-size:43px">PAUSED</h1>
+  <div class="pausePanel">
+    <div class="pauseHeader"><span id="pauseZone">Neon Cave</span><span id="pauseWave">Wave 1</span></div>
+    <div id="pauseStats" class="stats"></div>
+    <div class="pauseBuild" id="pausePowerList">No powers yet.</div>
+  </div>
+  <button id="resumeBtn" class="mainBtn primary">RESUME</button>
+  <button id="quitBtn" class="mainBtn">MAIN MENU</button>
+</div>
+
+<div id="over" class="screen hidden">
+  <h1 style="font-size:50px">RUN OVER</h1>
+  <div id="finalStats" class="stats"></div>
+  <button id="againBtn" class="mainBtn primary">TRY AGAIN</button>
+  <button id="menuBtn" class="mainBtn">MAIN MENU</button>
+</div>
+
+<div id="achievements" class="screen scrollScreen hidden">
+  <button class="metaClose" data-close="achievements">×</button>
+  <h1 style="font-size:40px">ACHIEVEMENTS</h1>
+  <p class="subtitle">Persistent challenges and milestones.</p>
+  <div id="achievementCards" class="cards"></div>
+</div>
+
+<div id="shop" class="screen scrollScreen hidden">
+  <button class="metaClose" data-close="shop">×</button>
+  <h1 style="font-size:43px">SHOP</h1>
+  <div id="shopMoney" style="color:#f3cf73;font-weight:900;margin:10px"></div>
+  <p class="subtitle">Unlock powers permanently for future runs.</p>
+  <div id="shopCards" class="cards"></div>
+</div>
+
+<div id="dex" class="screen scrollScreen hidden">
+  <button class="metaClose" data-close="dex">×</button>
+  <h1 style="font-size:42px">POWER DEX</h1>
+  <p class="subtitle">Seen powers are revealed. Unknown powers stay as ?.</p>
+  <div id="dexCards" class="cards"></div>
+</div>
+
+<div id="settings" class="screen hidden">
+  <button class="metaClose" data-close="settings">×</button>
+  <h1 style="font-size:42px">ADJUST WATT</h1>
+  <div class="settingsBox">
+    <div class="settingsRow">
+      <label>Button Size <span id="buttonSizeValue">82%</span></label>
+      <input id="buttonSize" class="range" type="range" min="60" max="100" step="1" value="82">
+      <small>Changes gameplay and menu buttons.</small>
+    </div>
+    <div class="settingsRow">
+      <label>Rotate With Movement <input id="rotateToggle" class="switch" type="checkbox" checked></label>
+      <small>Turn the character toward the movement direction.</small>
+    </div>
+    <div class="settingsRow">
+      <label>Epilepsy Safe Mode <input id="epilepsyToggle" class="switch" type="checkbox"></label>
+      <small>Removes screen shake, intense glow and rapid visual flashes.</small>
+    </div>
+    <div class="settingsRow">
+      <label>Character Image</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+        <img id="charPreview" class="preview" alt="Character preview">
+        <div style="flex:1">
+          <input id="charFile" type="file" accept="image/png,image/jpeg,image/webp" style="width:100%">
+          <button id="removeChar" class="mainBtn" style="width:100%;margin:7px 0 0;padding:10px;font-size:13px">REMOVE IMAGE</button>
+        </div>
+      </div>
+      <small>Upload your own square character image. It is stored locally in this browser.</small>
+    </div>
+    <div class="settingsRow">
+      <label>Character Shape
+        <select id="charShape" style="background:#111b2d;color:#eef;border:1px solid #405676;border-radius:9px;padding:7px">
+          <option value="triangle">Triangle</option>
+          <option value="square">Square</option>
+          <option value="circle">Circle</option>
+        </select>
+      </label>
+      <small>Visual shape only. All three shapes use the exact same hitbox.</small>
+    </div>
+    <div class="settingsRow">
+      <label>Character Accent <input id="accentColor" type="color" value="#70d9ff"></label>
+      <small>Changes the character color and glow.</small>
+    </div>
+    <button id="resetSettings" class="mainBtn" style="width:100%;margin:10px 0 0">RESET SETTINGS</button>
+  </div>
+</div>
+
+<div id="visitor" class="screen hidden">
+  <div id="visitorIcon" style="font-size:65px">✦</div>
+  <h1 id="visitorName" style="font-size:37px">VISITOR</h1>
+  <p id="visitorText" class="subtitle"></p>
+  <div id="visitorChoices" class="cards"></div>
+</div>
+
+</div>
+
+<script>
+window.WattMeta = (() => {
+  let storageKey = "wattsNWavesMeta", bestKey = "wattsNWavesBest";
+  const defaults = {
+    money:0, unlocked:[], seen:[], rewardedRuns:0, highestWave:0, totalKills:0,
+    totalRuns:0, totalMana:0, upgradePicks:0, shopBuys:0, novaUses:0, dashUses:0,
+    noHitWaves:0, achievements:[], settings:{buttonScale:.82,rotate:true,epilepsy:false,accent:"#70d9ff",charImage:"",shape:"triangle"}
+  };
+  function parseStored(key){try{return JSON.parse(localStorage.getItem(key)||"{}")}catch(e){return {}}}
+  function normalize(raw){
+    const d=Object.assign({},defaults,raw||{});
+    d.settings=Object.assign({},defaults.settings,(raw&&raw.settings)||{});
+    d.achievements=Array.isArray(d.achievements)?d.achievements:[];
+    d.unlocked=Array.isArray(d.unlocked)?d.unlocked:[];
+    d.seen=Array.isArray(d.seen)?d.seen:[];
+    return d;
+  }
+  let data=normalize(parseStored(storageKey));
+  function replaceData(next){Object.keys(data).forEach(k=>delete data[k]);Object.assign(data,normalize(next));}
+  const save=()=>{localStorage.setItem(storageKey,JSON.stringify(data));if(typeof window.__wattScheduleSync==='function')window.__wattScheduleSync()};
+  function loadForUser(uid){
+    if(!uid)return getBest();
+    const nextKey="wattsNWavesMeta:"+uid, nextBestKey="wattsNWavesBest:"+uid;
+    let saved=localStorage.getItem(nextKey);
+    if(!saved && !localStorage.getItem("wattsNWavesLegacyClaimedBy")){
+      const legacy=localStorage.getItem("wattsNWavesMeta"),legacyBest=localStorage.getItem("wattsNWavesBest");
+      if(legacy){localStorage.setItem(nextKey,legacy);saved=legacy}
+      if(legacyBest&&!localStorage.getItem(nextBestKey))localStorage.setItem(nextBestKey,legacyBest);
+      localStorage.setItem("wattsNWavesLegacyClaimedBy",uid);
+    }
+    storageKey=nextKey;bestKey=nextBestKey;
+    replaceData(parseStored(storageKey));
+    return getBest();
+  }
+  const getBest=()=>Number(localStorage.getItem(bestKey)||0)||0;
+  const setBest=value=>{localStorage.setItem(bestKey,String(Math.max(0,Number(value)||0)));if(typeof window.__wattScheduleSync==='function')window.__wattScheduleSync()};
+  const getStats=bestWave=>({
+    highestWave:Math.max(0,Number(data.highestWave)||0),bestWave:Math.max(0,Number(bestWave)||0),
+    totalKills:Math.max(0,Number(data.totalKills)||0),totalRuns:Math.max(0,Number(data.totalRuns)||0),
+    credits:Math.max(0,Number(data.money)||0),money:Math.max(0,Number(data.money)||0),
+    unlockedPowers:data.unlocked.length,unlockedPowerIds:data.unlocked.slice(0,100),
+    achievementCount:data.achievements.length,achievementIds:data.achievements.slice(0,100),
+    seenPowers:data.seen.length,totalMana:Math.max(0,Math.round(Number(data.totalMana)||0)),
+    upgradePicks:Math.max(0,Number(data.upgradePicks)||0),shopBuys:Math.max(0,Number(data.shopBuys)||0),
+    novaUses:Math.max(0,Number(data.novaUses)||0),dashUses:Math.max(0,Number(data.dashUses)||0),
+    noHitWaves:Math.max(0,Number(data.noHitWaves)||0),rewardedRuns:Math.max(0,Number(data.rewardedRuns)||0)
+  });
+  const reward=w=>w<=1?2:w===2?20:w===3?30:w===4?40:w===5?50:50+(w-5)*12+Math.floor((w-5)*(w-5)*1.5);
+  return {data,save,reward,loadForUser,getBest,setBest,getStats};
+})();
+</script>
+
+<script>
+(()=> {
+"use strict";
+const $=s=>document.querySelector(s);
+let hublandUid=null,wattSyncTimer=null;
+function sendWattStats(){
+  if(!hublandUid||window.parent===window)return;
+  try{window.parent.postMessage({type:"PLATFORM_REBORN_GAME_STATS",game:"wattsnwaves",stats:WattMeta.getStats(best)},"*")}catch(_){}
+}
+window.__wattScheduleSync=()=>{if(wattSyncTimer)clearTimeout(wattSyncTimer);wattSyncTimer=setTimeout(sendWattStats,650)};
+window.addEventListener("message",event=>{
+  const msg=event.data||{};
+  if(msg.type==="HUBLAND_AUTH_CONTEXT"){
+    const uid=String(msg.uid||"").trim();
+    if(uid&&uid!==hublandUid){
+      hublandUid=uid;
+      best=WattMeta.loadForUser(uid);
+      loadCharacterImage(WattMeta.data.settings.charImage||"");
+      applySettings();
+      $("#bestTxt").textContent="Best Wave: "+best;
+      WattMeta.save();
+    }
+  }else if(msg.type==="PLATFORM_REBORN_REQUEST_STATS"){
+    sendWattStats();
+  }
+});
+const canvas=$("#c"),ctx=canvas.getContext("2d",{alpha:false});
+let W=0,H=0,dpr=1,last=0,running=false,paused=false,choosing=false,gameTime=0,shake=0,hudClock=0;
+let player,enemies=[],bullets=[],particles=[],pickups=[],wave=1,waveKills=0,targetKills=12,spawnTimer=.4,boss=null;
+let joy={id:null,x:0,y:0},attackHeld=false,tutorial=false,tutorialStep=0,tutorialPowerChosen=false,levelUpTimer=null;
+let best=WattMeta.getBest();
+let characterImage=null;
+const MAX_PARTICLES=380,MAX_BULLETS=260,MAX_PICKUPS=180;
+const RARITIES=["common","uncommon","rare","epic","legendary","mythic"];
+const RARITY_NAMES={common:"Common",uncommon:"Uncommon",rare:"Rare",epic:"Epic",legendary:"Legendary",mythic:"Mythic"};
+const RARITY_COLORS={common:"#b7c1d2",uncommon:"#6fd6a0",rare:"#62c6ff",epic:"#b58cff",legendary:"#ffb45f",mythic:"#ff6bb7"};
+
+function resize(){
+  const r=$("#game").getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;
+  canvas.width=Math.max(1,Math.floor(W*dpr));canvas.height=Math.max(1,Math.floor(H*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+addEventListener("resize",resize);resize();
+
+const rand=(a,b)=>Math.random()*(b-a)+a;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const playTop=64,playBottom=145;
+const bossWaves=new Set([80,150,250]);
+
+function regionForWave(w){
+  if(w<=19)return {name:"Neon Cave",key:"neon",a:"#071825",b:"#0b1020",grid:"#1b3850",accent:"#63dfff"};
+  if(w===20)return {name:"Neon Cave Exit",key:"neonExit",a:"#101f2a",b:"#151322",grid:"#294a5c",accent:"#7de6ff"};
+  if(w<=49)return {name:"Moon Valley",key:"moon",a:"#0a1020",b:"#12162b",grid:"#33405c",accent:"#b7c8ff"};
+  if(w===50)return {name:"Moon Valley Exit",key:"moonExit",a:"#151827",b:"#1f1726",grid:"#4f4a64",accent:"#d8c3ff"};
+  if(w<=79)return {name:"Holovolcanic Fields",key:"volcano",a:"#240d0b",b:"#17090a",grid:"#4e2921",accent:"#ff8d59"};
+  if(w===80)return {name:"Magma Boss",key:"magma",a:"#310d07",b:"#1b0707",grid:"#62301c",accent:"#ff6944"};
+  if(w<=99)return {name:"Entrance to Atlantis",key:"atlantisGate",a:"#06202b",b:"#071824",grid:"#1e5164",accent:"#65e8f2"};
+  if(w<=119)return {name:"Atlantis",key:"atlantis",a:"#052b35",b:"#071c28",grid:"#1c6571",accent:"#54f6d0"};
+  if(w===120)return {name:"Gate of Neptune's Castle",key:"neptuneGate",a:"#0a2338",b:"#0b1826",grid:"#355c7d",accent:"#80c7ff"};
+  if(w<=149)return {name:"Neptune's Castle",key:"neptuneCastle",a:"#101735",b:"#0d1022",grid:"#384d7a",accent:"#a0a9ff"};
+  if(w===150)return {name:"Neptune",key:"neptune",a:"#18204a",b:"#110e29",grid:"#534d8b",accent:"#c29dff"};
+  if(w<=159)return {name:"Seal of Atlantis",key:"seal",a:"#082933",b:"#07171f",grid:"#2d6d74",accent:"#8df8ed"};
+  if(w===160)return {name:"Escape",key:"escape",a:"#220a16",b:"#0d0b14",grid:"#5c1f31",accent:"#ff6f95"};
+  if(w<=200)return {name:"Temple of Artemis",key:"artemisTemple",a:"#241a0c",b:"#14100b",grid:"#685637",accent:"#ffd27b"};
+  if(w<=219)return {name:"Artemis' Serenity",key:"artemisSerenity",a:"#201813",b:"#11141a",grid:"#5b5143",accent:"#e4d7c0"};
+  if(w<=249)return {name:"Heirs of Artemis' Arrows",key:"artemisHeirs",a:"#2a1510",b:"#15100e",grid:"#72412d",accent:"#ffb05f"};
+  if(w===250)return {name:"Artemis",key:"artemis",a:"#2c130a",b:"#120b0b",grid:"#713824",accent:"#ff8b4f"};
+  return {name:"Neon Cave "+(w-250),key:"neonLoop",a:"#071825",b:"#0b1020",grid:"#1b3850",accent:"#63dfff"};
+}
+
+function currentTheme(){return regionForWave(wave)}
+function addParticle(p){
+  if(WattMeta.data.settings.epilepsy && Math.random()<.55)return;
+  if(particles.length>=MAX_PARTICLES)particles.splice(0,Math.max(1,Math.floor(MAX_PARTICLES*.08)));
+  particles.push(p);
+}
+function addBullet(b){
+  if(bullets.length>=MAX_BULLETS)bullets.splice(0,20);
+  bullets.push(b);
+}
+function addPickup(p){
+  if(pickups.length>=MAX_PICKUPS)pickups.splice(0,15);
+  p.x=clamp(p.x,24,W-24);p.y=clamp(p.y,playTop+12,H-playBottom-12);
+  pickups.push(p);
+}
+function burst(x,y,color,n=10,s=100){
+  if(WattMeta.data.settings.epilepsy)n=Math.min(n,5);
+  for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),sp=rand(s*.3,s);addParticle({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:rand(.25,.65),max:.65,r:rand(1,4),color})}
+}
+function floatText(x,y,text,color){
+  addParticle({x,y,vx:0,vy:-32,life:.58,max:.58,r:0,color,text});
+}
+function say(t){$("#toast").textContent=t;$("#toast").style.opacity="1";setTimeout(()=>$("#toast").style.opacity="0",700)}
+
+function loadCharacterImage(dataUrl){
+  characterImage=null;
+  if(!dataUrl)return;
+  const im=new Image();
+  im.onload=()=>{characterImage=im;drawSettingsPreview()};
+  im.src=dataUrl;
+}
+function drawSettingsPreview(){
+  const img=$("#charPreview"); if(!img)return;
+  img.src=WattMeta.data.settings.charImage||"data:image/svg+xml;charset=utf-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%" height="100%" rx="18" fill="#111b2d"/><circle cx="40" cy="40" r="22" fill="#70d9ff"/><path d="M40 17L57 56H23Z" fill="#eef7ff"/></svg>');
+}
+function applySettings(){
+  const s=WattMeta.data.settings;
+  document.documentElement.style.setProperty("--button-scale",String(s.buttonScale));
+  document.documentElement.style.setProperty("--menu-button-scale",String(s.buttonScale));
+  document.documentElement.style.setProperty("--player-accent",s.accent||"#70d9ff");
+  $("#c").style.filter="none";
+  $("#buttonSize").value=Math.round(s.buttonScale*100);
+  $("#buttonSizeValue").textContent=Math.round(s.buttonScale*100)+"%";
+  $("#rotateToggle").checked=!!s.rotate;
+  $("#epilepsyToggle").checked=!!s.epilepsy;
+  $("#accentColor").value=s.accent||"#70d9ff"; $("#charShape").value=s.shape||"triangle";
+  drawSettingsPreview();
+}
+function resetSettings(){
+  WattMeta.data.settings={buttonScale:.82,rotate:true,epilepsy:false,accent:"#70d9ff",charImage:"",shape:"triangle"};
+  WattMeta.save();loadCharacterImage("");applySettings();
+}
+
+function reset(){
+  player={
+    x:W/2,y:H*.58,r:14,hp:50,maxHp:50,speed:185,damage:18,fireRate:.38,bulletSpeed:460,
+    crit:.08,critMul:2,level:1,mana:0,nextMana:55,fireTimer:0,
+    dashCd:0,dashMax:2.5,dashPower:600,dashTime:0,invuln:0,novaCd:0,novaMax:8,novaRange:240,novaMult:2.8,
+    regen:0,projectiles:1,pierce:0,magnet:120,kills:0,armor:0,lifeSteal:0,rapidTime:0,
+    shield:0,powerLevels:{},sawCount:0,minionCount:0,ultra:false,guardian:0,guardianLeft:0,
+    voidShield:false,storm:false,homing:0,splash:0,slow:0,burn:0,chain:0,bossDamage:0,
+    xpMult:1,healBonus:0,minionDamage:.55,minionRate:1.8,damageTakenMult:1,thorns:0,
+    novaRapid:0,angle:-Math.PI/2,noHitWave:true,zone:regionForWave(1)
+  };
+  enemies=[];bullets=[];particles=[];pickups=[];wave=1;waveKills=0;targetKills=8;spawnTimer=.4;
+  boss=null;gameTime=0;shake=0;paused=false;choosing=false;hudClock=0;attackHeld=false;
+  $("#bossWrap").style.display="none";$("#hud").classList.remove("hidden");
+  updateHUD(true);
+}
+
+function startRun(isTutorial=false){
+  tutorial=!!isTutorial;tutorialStep=0;tutorialPowerChosen=false;reset();
+  $("#menu").classList.add("hidden");$("#how").classList.add("hidden");$("#over").classList.add("hidden");
+  $("#pause").classList.add("hidden");$("#upgrade").classList.add("hidden");$("#visitor").classList.add("hidden");
+  $("#controls").classList.remove("hidden");$("#pauseBtn").classList.remove("hidden");
+  $("#tutorialPanel").classList.toggle("hidden",!tutorial);
+  if(tutorial)setTutorialStep(0);
+  running=true;last=performance.now();requestAnimationFrame(loop);say("Wave 1");window.__wattScheduleSync?.();
+}
+
+function backToMenu(){
+  running=false;paused=false;choosing=false;tutorial=false;tutorialPowerChosen=false;attackHeld=false;joy.id=null;joy.x=joy.y=0;
+  ["#over","#pause","#upgrade","#how","#shop","#dex","#achievements","#settings","#visitor"].forEach(id=>$(id)?.classList.add("hidden"));
+  $("#hud").classList.add("hidden");$("#controls").classList.add("hidden");$("#pauseBtn").classList.add("hidden");$("#tutorialPanel").classList.add("hidden");
+  $("#menu").classList.remove("hidden");$("#bestTxt").textContent="Best Wave: "+best;
+}
+
+function regionBossName(w){return w===80?"Magma Titan":w===150?"Neptune":w===250?"Artemis":"Rift Boss"}
+
+function spawnEnemy(type){
+  const side=Math.floor(rand(0,4));let x,y;
+  if(side===0){x=rand(20,W-20);y=-30}else if(side===1){x=W+30;y=rand(playTop,H-playBottom)}
+  else if(side===2){x=rand(20,W-20);y=H+30}else{x=-30;y=rand(playTop,H-playBottom)}
+  let e={x,y,vx:0,vy:0,type,r:14,hp:38+wave*4,maxHp:38+wave*4,speed:58+Math.min(95,wave*.9),damage:10,color:"#ff4d7f",mana:12,hit:0,shoot:0,slowTimer:0,burnTimer:0};
+  if(type==="swift")Object.assign(e,{r:10,hp:24+wave*2.8,maxHp:24+wave*2.8,speed:98+Math.min(125,wave*1.25),color:"#56dcff",mana:10});
+  if(type==="tank")Object.assign(e,{r:22,hp:105+wave*9,maxHp:105+wave*9,speed:38+Math.min(60,wave*.65),color:"#9b72ff",damage:16,mana:24});
+  if(type==="bomber")Object.assign(e,{r:17,hp:56+wave*4,maxHp:56+wave*4,speed:78+Math.min(70,wave),color:"#ff9f45",damage:25,mana:26});
+  if(type==="leech")Object.assign(e,{r:12,hp:34+wave*3.4,maxHp:34+wave*3.4,speed:138+Math.min(100,wave*1.3),color:"#93eb63",damage:7,mana:16});
+  if(type==="elite")Object.assign(e,{r:25,hp:220+wave*16,maxHp:220+wave*16,speed:48,color:"#ff4dcc",damage:23,mana:48});
+  if(type==="shooter")Object.assign(e,{r:15,hp:46+wave*4,maxHp:46+wave*4,speed:50,color:"#ffd66b",damage:9,mana:18,shoot:rand(.5,1.3)});
+  enemies.push(e);return e;
+}
+function spawnBoss(){
+  const e=spawnEnemy("elite");Object.assign(e,{
+    type:"boss",x:W/2,y:118,r:38,hp:1300+wave*95,maxHp:1300+wave*95,
+    speed:40,damage:28,mana:260,color:currentTheme().accent,shoot:.5
+  });
+  boss=e;$("#bossName").textContent=regionBossName(wave);$("#bossWrap").style.display="block";
+  say(regionBossName(wave)+" appears!");
+}
+function targetEnemy(){
+  let t=null,bd=Infinity;
+  for(let i=0;i<enemies.length;i++){const e=enemies[i],d=dist(player,e);if(d<bd){bd=d;t=e}}
+  return t;
+}
+function fire(){
+  if(!running||paused||choosing||player.fireTimer>0)return;
+  const t=targetEnemy();
+  player.fireTimer=player.rapidTime>0?player.fireRate*.45:player.fireRate;
+  const base=t?Math.atan2(t.y-player.y,t.x-player.x):player.angle-Math.PI/2;
+  const count=Math.min(10,player.projectiles);
+  for(let i=0;i<count;i++){
+    const spread=(i-(count-1)/2)*.12,a=base+spread;
+    addBullet({
+      x:player.x,y:player.y,vx:Math.cos(a)*player.bulletSpeed,vy:Math.sin(a)*player.bulletSpeed,
+      r:5,damage:player.damage,life:1.5,pierce:player.pierce,enemy:false,color:WattMeta.data.settings.accent,
+      target:t,homing:player.homing
+    });
+  }
+  burst(player.x,player.y,WattMeta.data.settings.accent,3,70);
+}
+function dash(){
+  if(player.dashCd>0||paused||choosing)return;
+  player.dashCd=player.dashMax;player.dashTime=.22;player.invuln=.34;
+  let dx=joy.x,dy=joy.y;if(Math.hypot(dx,dy)<.2){dx=Math.cos(player.angle-Math.PI/2);dy=Math.sin(player.angle-Math.PI/2)}
+  const n=Math.hypot(dx,dy)||1;player.dashVX=dx/n*player.dashPower;player.dashVY=dy/n*player.dashPower;
+  WattMeta.data.dashUses++;WattMeta.save();if(!WattMeta.data.settings.epilepsy)burst(player.x,player.y,"#8cefff",10,150);
+}
+function nova(){
+  if(player.novaCd>0||paused||choosing)return;
+  player.novaCd=player.novaMax;WattMeta.data.novaUses++;WattMeta.save();
+  if(!WattMeta.data.settings.epilepsy)shake=12;
+  say("NOVA!");
+  const mult=player.novaMult;
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i],d=dist(player,e);
+    if(d<player.novaRange)hurtEnemy(e,player.damage*mult*(1-d/(player.novaRange*1.6)),true);
+  }
+  if(player.novaRapid)player.rapidTime+=player.novaRapid;
+  const n=WattMeta.data.settings.epilepsy?12:28;
+  for(let i=0;i<n;i++){const a=rand(0,Math.PI*2);addParticle({x:player.x,y:player.y,vx:Math.cos(a)*rand(100,240),vy:Math.sin(a)*rand(100,240),life:rand(.3,.7),max:.7,r:rand(2,5),color:currentTheme().accent})}
+}
+function enemyShoot(e){
+  const a=Math.atan2(player.y-e.y,player.x-e.x);
+  addBullet({x:e.x,y:e.y,vx:Math.cos(a)*185,vy:Math.sin(a)*185,r:7,damage:e.damage,life:4,enemy:true,color:"#ff655f"});
+}
+function hurtEnemy(e,dmg,fromNova=false){
+  if(!e||enemies.indexOf(e)<0)return;
+  if(player.ultra&&!fromNova)dmg=1e12;
+  if(e.type==="boss")dmg*=1+player.bossDamage;
+  const crit=Math.random()<player.crit;dmg*=crit?player.critMul:1;
+  e.hp-=dmg;e.hit=.08;
+  if(player.lifeSteal)player.hp=Math.min(player.maxHp,player.hp+dmg*player.lifeSteal);
+  if(player.burn && !fromNova)e.burnTimer=Math.max(e.burnTimer,player.burn);
+  floatText(e.x,e.y-(e.r+7),Math.round(dmg)+(crit?"!":""),crit?"#ffd36c":"#fff");
+  if(player.splash&&!fromNova){
+    const r=player.splash;
+    for(let i=enemies.length-1;i>=0;i--){const q=enemies[i];if(q!==e&&dist(e,q)<r)q.hp-=dmg*.18}
+  }
+  if(player.chain&&!fromNova&&Math.random()<player.chain){
+    let nearest=null,bd=220;
+    for(let i=0;i<enemies.length;i++){const q=enemies[i];if(q!==e){const dd=dist(e,q);if(dd<bd){bd=dd;nearest=q}}}
+    if(nearest)nearest.hp-=dmg*.3;
+  }
+  if(e.hp<=0)killEnemy(e);
+}
+function killEnemy(e){
+  const idx=enemies.indexOf(e);if(idx<0)return;
+  enemies.splice(idx,1);player.kills++;waveKills++;WattMeta.data.totalKills++;
+  const pieces=Math.max(1,Math.min(7,Math.ceil(e.mana/9)));
+  for(let i=0;i<pieces;i++)addPickup({x:e.x+rand(-10,10),y:e.y+rand(-10,10),type:"mana",value:e.mana/pieces,r:6});
+  if(Math.random()<.08)addPickup({x:e.x,y:e.y,type:"heal",value:12+player.healBonus,r:8});
+  if(Math.random()<.025)addPickup({x:e.x,y:e.y,type:"rapid",value:5,r:8});
+  burst(e.x,e.y,e.color,WattMeta.data.settings.epilepsy?5:12,130);
+  if(e===boss){
+    boss=null;$("#bossWrap").style.display="none";waveKills=targetKills;
+    if(player.novaRapid<1)player.invuln=.7;
+    say(regionForWave(wave).name+" cleared!");
+  }
+  WattMeta.save();
+}
+function damagePlayer(d){
+  if(player.invuln>0)return;
+  if(player.guardianLeft>0){player.guardianLeft--;player.invuln=.5;say("Guardian blocked the hit");return}
+  d=Math.max(.5,d-player.armor);d*=player.damageTakenMult;
+  player.hp-=d;player.invuln=.5;player.noHitWave=false;
+  if(player.thorns){
+    for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(dist(e,player)<90)hurtEnemy(e,player.thorns)}
+  }
+  if(!WattMeta.data.settings.epilepsy)shake=7;
+  burst(player.x,player.y,"#ff5969",8,120);
+  if(player.hp<=0)gameOver();
+}
+function gainMana(v){
+  const amount=v*player.xpMult;
+  player.mana+=amount;WattMeta.data.totalMana+=amount;
+  while(player.mana>=player.nextMana){
+    player.mana-=player.nextMana;player.level++;player.nextMana=Math.floor(player.nextMana*1.28+14);
+    setTimeout(showUpgrade,40);
+  }
+  WattMeta.save();
+}
+function showUpgrade(){
+  if(!running||choosing)return;
+  choosing=true;paused=false;$("#upgrade").classList.remove("hidden");$("#controls").classList.add("hidden");
+  const pool=upgrades.filter(u=>u.shop===0||WattMeta.data.unlocked.includes(u.id));
+  const opts=[];
+  const shuffled=pool.slice().sort(()=>Math.random()-.5);
+  for(let i=0;i<shuffled.length&&opts.length<3;i++)if(!opts.some(o=>o.id===shuffled[i].id))opts.push(shuffled[i]);
+  const box=$("#upgradeCards");box.innerHTML="";
+  opts.forEach(u=>{
+    const level=(player.powerLevels[u.id]||0)+1;
+    const rarity=RARITIES[Math.min(5,Math.max(0,level-1))];
+    const b=document.createElement("button");b.className="card";
+    b.innerHTML=`<b style="color:${RARITY_COLORS[rarity]}">${u.name} — Lv.${level}</b><span style="color:${RARITY_COLORS[rarity]};font-weight:900">${RARITY_NAMES[rarity]}</span><br><span>${u.desc}</span>`;
+    b.onclick=()=>{
+      player.powerLevels[u.id]=level;for(let i=0;i<level;i++)u.apply();
+      if(!WattMeta.data.seen.includes(u.id))WattMeta.data.seen.push(u.id);
+      WattMeta.data.upgradePicks++;WattMeta.save();
+      $("#upgrade").classList.add("hidden");choosing=false;$("#controls").classList.remove("hidden");
+      say(u.name+" Lv."+level);
+      if(tutorial){tutorialPowerChosen=true;setTutorialStep(4);$("#tutorialStepText").textContent="Power selected. Complete Wave 1 to finish the tutorial.";}
+    };
+    box.appendChild(b);
+  });
+}
+const mk=(id,name,rarity,shop,desc,apply)=>({id,name,rarity,shop,desc,apply});
+const upgrades=[
+mk("overload","Overload","common",0,"+18% damage.",()=>player.damage*=1.18),
+mk("accelerator","Accelerator","common",0,"-12% attack cooldown.",()=>player.fireRate*=.88),
+mk("titan","Titan Heart","common",0,"+10 max HP and heal for 10.",()=>{player.maxHp+=10;player.hp=Math.min(player.maxHp,player.hp+10)}),
+mk("thruster","Thruster","common",0,"+10% move speed.",()=>player.speed*=1.10),
+mk("carbon","Carbon Armor","common",0,"Take 1 less damage.",()=>player.armor+=1),
+mk("magnet","Magnetic Field","common",0,"+40 pickup range.",()=>player.magnet+=40),
+mk("focus","Focus Core","common",0,"+8% critical chance.",()=>player.crit=Math.min(.9,player.crit+.08)),
+mk("ballast","Ballast Rounds","common",0,"+12% bullet speed.",()=>player.bulletSpeed*=1.12),
+mk("novaCharge","Nova Charge","common",0,"-8% Nova cooldown.",()=>player.novaMax*=.92),
+mk("repair","Field Repair","common",0,"+0.6 HP regenerated per second.",()=>player.regen+=.6),
+mk("plating","Extra Plating","common",0,"+8 max HP.",()=>{player.maxHp+=8;player.hp+=8}),
+mk("study","Mana Siphon","common",0,"+12% Mana gain.",()=>player.xpMult*=1.12),
+mk("aim","Guided Aim","common",0,"+10% bullet speed and tighter aim.",()=>{player.bulletSpeed*=1.1}),
+mk("vital","Vital Pack","common",0,"Health pickups heal 5 more.",()=>player.healBonus+=5),
+mk("hardpoint","Hardpoint","common",0,"+8% damage against all enemies.",()=>player.damage*=1.08),
+
+mk("multishot","Multishot","uncommon",180,"+1 projectile.",()=>player.projectiles=Math.min(10,player.projectiles+1)),
+mk("pierce","Rift Pierce","uncommon",260,"+1 bullet pierce.",()=>player.pierce++),
+mk("rapid","Rapid Fire","uncommon",320,"-12% attack cooldown.",()=>player.fireRate*=.88),
+mk("dashcore","Phase Dash","uncommon",420,"-16% dash cooldown.",()=>player.dashMax*=.84),
+mk("novacore","Nova Core","uncommon",520,"-15% Nova cooldown.",()=>player.novaMax*=.85),
+mk("homing","Homing Rounds","uncommon",640,"Bullets gently track targets.",()=>player.homing=Math.min(1,player.homing+.18)),
+mk("splash","Splash Core","uncommon",760,"Hits splash nearby enemies.",()=>player.splash+=34),
+mk("vampire","Vampire Circuit","uncommon",900,"Heal for 1.5% of damage dealt.",()=>player.lifeSteal+=.015),
+mk("battery","Overcharged Battery","uncommon",1050,"+12% Nova range.",()=>player.novaRange*=1.12),
+mk("reinforced","Reinforced Hull","uncommon",1200,"+2 armor.",()=>player.armor+=2),
+mk("swift","Swift Foot","uncommon",1350,"+12% move speed.",()=>player.speed*=1.12),
+mk("phaseDrive","Phase Drive","uncommon",1500,"+12% dash power.",()=>player.dashPower*=1.12),
+mk("manaWell","Mana Well","uncommon",1700,"+18% Mana gain.",()=>player.xpMult*=1.18),
+mk("frost","Frost Rounds","uncommon",1900,"Slow enemies briefly on hit.",()=>player.slow+=.12),
+
+mk("saws","Orbit Saws","rare",2400,"Add an orbiting saw.",()=>player.sawCount++),
+mk("minions","Rift Minions","rare",3000,"Add a helper minion.",()=>player.minionCount++),
+mk("critmaster","Critical Mastery","rare",3600,"+12% critical chance.",()=>player.crit=Math.min(.95,player.crit+.12)),
+mk("critforce","Critical Force","rare",4300,"+0.35 critical multiplier.",()=>player.critMul+=.35),
+mk("chain","Chain Lightning","rare",5000,"Chance to chain damage to another enemy.",()=>player.chain=Math.min(.65,player.chain+.12)),
+mk("bosskiller","Boss Hunter","rare",6200,"+18% damage against bosses.",()=>player.bossDamage+=.18),
+mk("magnetcore","Magnet Core","rare",7000,"+80 pickup range.",()=>player.magnet+=80),
+mk("guardian","Guardian Spirit","rare",8000,"Block one hit every wave.",()=>{player.guardian++;player.guardianLeft++}),
+mk("phaseguard","Phase Guard","rare",9000,"+0.12 seconds of dash invulnerability.",()=>player.invuln=Math.max(player.invuln,.46)),
+mk("minionforge","Minion Forge","rare",10000,"Minions deal more damage and attack faster.",()=>{player.minionDamage*=1.35;player.minionRate*=1.12}),
+mk("novaMaster","Nova Master","rare",11500,"+20% Nova range and damage.",()=>{player.novaRange*=1.2;player.novaMult*=1.2}),
+mk("heavyRounds","Heavy Rounds","rare",12500,"+22% bullet damage.",()=>player.damage*=1.22),
+
+mk("orbitTwin","Twin Orbit","epic",14000,"Add two more orbit saws.",()=>player.sawCount+=2),
+mk("storm","Storm Core","epic",16500,"Nova hits nearby enemies again.",()=>player.storm=true),
+mk("blackhole","Black Hole Nova","epic",19000,"Nova gets much stronger and larger.",()=>{player.novaMult*=1.45;player.novaRange*=1.25;player.novaMax*=.82}),
+mk("arsenal","Expanded Arsenal","epic",22000,"+1 projectile and +10% damage.",()=>{player.projectiles=Math.min(10,player.projectiles+1);player.damage*=1.1}),
+mk("tempest","Tempest Drive","epic","+18% speed and +15% bullet speed.",()=>{player.speed*=1.18;player.bulletSpeed*=1.15}),
+mk("mirror","Mirror Shot","epic",30000,"+1 projectile and +1 pierce.",()=>{player.projectiles=Math.min(10,player.projectiles+1);player.pierce++}),
+mk("shatter","Shatter Core","epic","+0.45 critical multiplier.",()=>player.critMul+=.45),
+mk("echo","Nova Echo","epic",35000,"Nova grants 3 seconds of Rapid Fire.",()=>player.novaRapid+=3),
+mk("deathmark","Death Mark","epic",38000,"+25% boss damage.",()=>player.bossDamage+=.25),
+
+mk("voidshield","Void Shield","legendary",42000,"Gain a brief shield after taking damage.",()=>player.voidShield=true),
+mk("bloodEngine","Blood Engine","legendary",46000,"+3% lifesteal and +12% damage.",()=>{player.lifeSteal+=.03;player.damage*=1.12}),
+mk("chrono","Chrono Drive","legendary",50000,"Dash cooldown and attack cooldown fall sharply.",()=>{player.dashMax*=.78;player.fireRate*=.78}),
+mk("starforge","Starforge","legendary",54000,"+30% damage, +20% bullet speed.",()=>{player.damage*=1.3;player.bulletSpeed*=1.2}),
+mk("singularity","Singularity","legendary",58000,"Nova gets huge range and damage.",()=>{player.novaRange*=1.45;player.novaMult*=1.35}),
+mk("eternal","Eternal Core","legendary",65000,"Regeneration and max HP rise together.",()=>{player.regen+=1.8;player.maxHp+=20;player.hp+=20}),
+mk("angel","Guardian Angel","legendary",72000,"Gain two shield charges each wave.",()=>{player.guardian+=2;player.guardianLeft+=2}),
+
+mk("ultra","Ultra Ammo","mythic",100000,"Player bullets instantly destroy normal enemies.",()=>player.ultra=true),
+mk("infinity","Infinity Core","mythic",100000,"Massively improves damage, speed and Nova.",()=>{player.damage*=1.5;player.fireRate*=.68;player.novaMax*=.7;player.projectiles=Math.min(10,player.projectiles+1)}),
+mk("voidCrown","Void Crown","mythic",100000,"A full-spectrum boost to the whole build.",()=>{player.damage*=1.4;player.speed*=1.2;player.crit=Math.min(.98,player.crit+.12);player.projectiles=Math.min(10,player.projectiles+1);player.magnet+=100})
+];
+// Correct accidental argument count for Mirror Shot if needed.
+upgrades.forEach(u=>{if(u.shop===undefined){u.shop=0}});
+
+function update(dt){
+  gameTime+=dt;
+  player.fireTimer=Math.max(0,player.fireTimer-dt);player.dashCd=Math.max(0,player.dashCd-dt);
+  player.novaCd=Math.max(0,player.novaCd-dt);player.invuln=Math.max(0,player.invuln-dt);player.rapidTime=Math.max(0,player.rapidTime-dt);
+  if(player.regen)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
+  if(player.voidShield && player.invuln>.45)player.shield=1;
+
+  let mx=joy.x,my=joy.y;
+  if(player.dashTime>0){player.dashTime-=dt;player.x+=player.dashVX*dt;player.y+=player.dashVY*dt}
+  else{player.x+=mx*player.speed*dt;player.y+=my*player.speed*dt}
+  if(WattMeta.data.settings.rotate && Math.hypot(mx,my)>.08)player.angle=Math.atan2(my,mx)+Math.PI/2;
+  player.x=clamp(player.x,15,W-15);player.y=clamp(player.y,playTop,H-playBottom);
+
+  spawnTimer-=dt;
+  if(spawnTimer<=0 && !boss){
+    const cap=Math.min(30,5+Math.floor(wave/3));
+    if(enemies.length<cap){
+      const r=Math.random();
+      const type=wave<10?(r<.22?"swift":"basic")
+        :r<.16?"swift":r<.27?"tank":r<.38?"shooter":r<.47?"leech":r<.52?"bomber":r<.58?"elite":"basic";
+      spawnEnemy(type);
+    }
+    spawnTimer=Math.max(.16,.72-Math.min(.50,wave*.004));
+  }
+
+  if(waveKills>=targetKills&&!boss&&enemies.length===0){
+    if(player.noHitWave)WattMeta.data.noHitWaves++;
+    // Tutorial ends only after the player has actually selected a power
+    // and then completed the first full wave.
+    if(tutorial && tutorialPowerChosen && wave===1){
+      finishTutorial();
+      return;
+    }
+    wave++;waveKills=0;targetKills=Math.floor(8+Math.min(34,wave*.72));
+    player.hp=Math.min(player.maxHp,player.hp+8);player.guardianLeft=player.guardian;
+    player.zone=regionForWave(wave);player.noHitWave=true;
+    if(bossWaves.has(wave))spawnBoss();
+    say("Wave "+wave+" — "+player.zone.name);
+    WattMeta.data.highestWave=Math.max(WattMeta.data.highestWave,wave);WattMeta.save();
+    if(tutorial)advanceTutorial(true);
+  }
+
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];e.hit=Math.max(0,e.hit-dt);
+    if(e.burnTimer>0){e.burnTimer-=dt;e.hp-=player.burn*.55*dt;if(e.hp<=0){killEnemy(e);continue}}
+    if(e.slowTimer>0)e.slowTimer-=dt;
+    const spd=e.speed*(e.slowTimer>0?0.65:1),dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;
+    if(e.type==="shooter"||e.type==="boss"){
+      const wanted=e.type==="boss"?175:215;
+      if(d>wanted){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}
+      else if(d<wanted-35){e.x-=dx/d*spd*.7*dt;e.y-=dy/d*spd*.7*dt}
+      e.shoot-=dt;if(e.shoot<=0){enemyShoot(e);e.shoot=e.type==="boss"?.72:1.65}
+    }else{e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}
+    if(d<e.r+player.r){damagePlayer(e.damage);e.x-=dx/d*16;e.y-=dy/d*16}
+  }
+
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    if(b.homing && b.target && enemies.indexOf(b.target)>=0){
+      const desired=Math.atan2(b.target.y-b.y,b.target.x-b.x),cur=Math.atan2(b.vy,b.vx);
+      let diff=Math.atan2(Math.sin(desired-cur),Math.cos(desired-cur));
+      const ang=cur+clamp(diff,-2.8*b.homing*dt,2.8*b.homing*dt);
+      const spd=Math.hypot(b.vx,b.vy);b.vx=Math.cos(ang)*spd;b.vy=Math.sin(ang)*spd;
+    }
+    b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
+    if(b.life<=0||b.x<-50||b.x>W+50||b.y<-50||b.y>H+50){bullets.splice(i,1);continue}
+    if(b.enemy){
+      if(dist(b,player)<b.r+player.r){damagePlayer(b.damage);bullets.splice(i,1);continue}
+    }else{
+      let hit=false;
+      for(let j=enemies.length-1;j>=0;j--){
+        const e=enemies[j];if(dist(b,e)<b.r+e.r){
+          hurtEnemy(e,b.damage);b.pierce--;hit=true;
+          if(b.pierce<0){bullets.splice(i,1);break}
+          break;
+        }
+      }
+    }
+  }
+
+  for(let i=pickups.length-1;i>=0;i--){
+    const p=pickups[i],d=dist(p,player);
+    if(d<player.magnet){const k=1-d/player.magnet+.25;p.x+=(player.x-p.x)*k*5.5*dt;p.y+=(player.y-p.y)*k*5.5*dt}
+    if(d<player.r+p.r+7){
+      if(p.type==="mana")gainMana(p.value);
+      if(p.type==="heal")player.hp=Math.min(player.maxHp,player.hp+p.value);
+      if(p.type==="rapid")player.rapidTime+=p.value;
+      pickups.splice(i,1);
+    }
+  }
+
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+    if(p.life<=0)particles.splice(i,1);
+  }
+
+  if(player.sawCount){
+    for(let s=0;s<player.sawCount;s++){
+      const a=gameTime*1.7+s*Math.PI*2/Math.max(1,player.sawCount),sx=player.x+Math.cos(a)*58,sy=player.y+Math.sin(a)*58;
+      for(let i=enemies.length-1;i>=0;i--)if(Math.hypot(enemies[i].x-sx,enemies[i].y-sy)<enemies[i].r+10)hurtEnemy(enemies[i],player.damage*.045);
+    }
+  }
+  if(player.minionCount&&enemies.length){
+    for(let m=0;m<player.minionCount;m++){
+      if(Math.random()<dt*player.minionRate){
+        const a=gameTime*(.7+m*.05)+m*Math.PI*2/Math.max(1,player.minionCount),mx=player.x+Math.cos(a)*38,my=player.y+Math.sin(a)*38;
+        let t=null,bd=Infinity;for(let i=0;i<enemies.length;i++){const dd=Math.hypot(enemies[i].x-mx,enemies[i].y-my);if(dd<bd){bd=dd;t=enemies[i]}}
+        if(t){const ang=Math.atan2(t.y-my,t.x-mx);addBullet({x:mx,y:my,vx:Math.cos(ang)*350,vy:Math.sin(ang)*350,r:4,damage:player.damage*player.minionDamage,life:1.3,pierce:0,enemy:false,color:"#8bf6ad",target:t,homing:0})}
+      }
+    }
+  }
+
+  if(player.storm&&player.novaCd>player.novaMax-.12){
+    for(let i=enemies.length-1;i>=0;i--){if(dist(player,enemies[i])<170&&Math.random()<dt*.9)hurtEnemy(enemies[i],player.damage*.6,true)}
+  }
+  if(attackHeld)fire();
+  shake=Math.max(0,shake-(WattMeta.data.settings.epilepsy?80:35)*dt);
+  hudClock-=dt;if(hudClock<=0){hudClock=.08;updateHUD(false)}
+}
+
+function updateHUD(force){
+  if(!player)return;
+  $("#hpFill").style.width=clamp(player.hp/player.maxHp*100,0,100)+"%";
+  $("#hpLabel").textContent=Math.ceil(player.hp)+" / "+Math.ceil(player.maxHp);
+  $("#manaFill").style.width=clamp(player.mana/player.nextMana*100,0,100)+"%";
+  $("#manaLabel").textContent=Math.floor(player.mana)+" / "+Math.floor(player.nextMana);
+  const z=regionForWave(wave);$("#zoneTxt").textContent=z.name;$("#waveTxt").textContent="Wave "+wave;
+  if(boss){$("#bossFill").style.width=clamp(boss.hp/boss.maxHp*100,0,100)+"%";$("#bossLabel").textContent=Math.ceil(boss.hp)}
+  $("#pauseZone").textContent=z.name;$("#pauseWave").textContent="Wave "+wave;
+  if(force)$("#bestTxt").textContent="Best Wave: "+best;
+}
+function drawBackground(theme){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,theme.a);g.addColorStop(1,theme.b);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(!WattMeta.data.settings.epilepsy){const glow=ctx.createRadialGradient(W*.5,H*.38,10,W*.5,H*.38,Math.max(W,H)*.72);glow.addColorStop(0,theme.accent+"55");glow.addColorStop(1,"transparent");ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);}
+  ctx.strokeStyle=theme.grid;ctx.lineWidth=1;
+  const grid=46;
+  for(let x=0;x<W;x+=grid){ctx.beginPath();ctx.moveTo(x,playTop);ctx.lineTo(x,H-playBottom);ctx.stroke()}
+  for(let y=playTop;y<H-playBottom;y+=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  const k=theme.key;
+  ctx.globalAlpha=WattMeta.data.settings.epilepsy?.42:.78;ctx.strokeStyle=theme.accent;ctx.fillStyle=theme.accent;
+  if(k.startsWith("neon")){
+    for(let x=28;x<W;x+=72){ctx.beginPath();ctx.moveTo(x,playTop);ctx.lineTo(x+12,playTop+34);ctx.lineTo(x+24,playTop);ctx.stroke()}
+  }else if(k.startsWith("moon")){
+    ctx.beginPath();ctx.arc(W*.78,120,42,0,Math.PI*2);ctx.fill();ctx.fillStyle=theme.b;ctx.beginPath();ctx.arc(W*.82,112,42,0,Math.PI*2);ctx.fill();
+  }else if(k.startsWith("volcano")||k==="magma"){
+    for(let x=18;x<W;x+=95){ctx.beginPath();ctx.moveTo(x,H-playBottom);ctx.lineTo(x+18,H-playBottom-48);ctx.lineTo(x+42,H-playBottom);ctx.stroke()}
+  }else if(k.includes("atlantis")||k.includes("neptune")||k==="seal"){
+    for(let x=35;x<W;x+=80){ctx.beginPath();ctx.arc(x,130,6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(x+20,175,3,0,Math.PI*2);ctx.stroke()}
+  }else if(k.startsWith("artemis")){
+    for(let x=28;x<W;x+=88){ctx.beginPath();ctx.moveTo(x,H-playBottom);ctx.lineTo(x+22,H-playBottom-52);ctx.lineTo(x+44,H-playBottom);ctx.stroke()}
+    ctx.beginPath();ctx.arc(W*.5,125,28,0,Math.PI*2);ctx.stroke();
+  }else if(k==="escape"){
+    ctx.beginPath();ctx.moveTo(0,playTop);ctx.lineTo(W*.22,H-playBottom);ctx.moveTo(W,playTop);ctx.lineTo(W*.78,H-playBottom);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+function draw(){
+  const t=currentTheme();ctx.save();
+  if(shake&&!WattMeta.data.settings.epilepsy)ctx.translate(rand(-shake,shake),rand(-shake,shake));
+  ctx.clearRect(0,0,W,H);drawBackground(t);
+
+  for(let i=0;i<pickups.length;i++){
+    const p=pickups[i];ctx.save();ctx.translate(p.x,p.y);
+    ctx.beginPath();
+    if(p.type==="mana"){ctx.rotate(Math.PI/4);ctx.rect(-5,-5,10,10);ctx.fillStyle="#62dfff"}
+    else {ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fillStyle=p.type==="heal"?"#6ee7a4":"#ff77c3"}
+    ctx.fill();ctx.restore();
+  }
+
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fillStyle=b.color;
+    if(!WattMeta.data.settings.epilepsy){ctx.shadowBlur=22;ctx.shadowColor=b.color}
+    ctx.fill();ctx.shadowBlur=0;
+  }
+
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];ctx.save();ctx.translate(e.x,e.y);if(e.hit)ctx.globalAlpha=.72;
+    ctx.fillStyle=e.color;ctx.beginPath();
+    if(e.type==="swift"){
+      ctx.moveTo(0,-e.r);ctx.lineTo(e.r*.9,e.r*.7);ctx.lineTo(0,e.r*.25);ctx.lineTo(-e.r*.9,e.r*.7);ctx.closePath();
+    } else if(e.type==="tank"){
+      ctx.moveTo(0,-e.r);for(let k=1;k<8;k++){const a=-Math.PI/2+k*Math.PI/4;ctx.lineTo(Math.cos(a)*e.r,Math.sin(a)*e.r)}ctx.closePath();
+    } else if(e.type==="elite"||e.type==="boss"){
+      ctx.moveTo(0,-e.r);for(let k=1;k<10;k++){const a=-Math.PI/2+k*Math.PI/5;const rr=k%2?e.r*.72:e.r;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}ctx.closePath();
+    } else if(e.type==="shooter"){
+      ctx.arc(0,0,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#171d2d";ctx.fillRect(-e.r*.18,-e.r*.75,e.r*.36,e.r*1.5);
+    } else if(e.type==="bomber"){
+      ctx.arc(0,0,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#171d2d";ctx.beginPath();ctx.arc(0,0,e.r*.3,0,Math.PI*2);ctx.fill();
+    } else {
+      ctx.rect(-e.r,-e.r,e.r*2,e.r*2);
+    }
+    if(!WattMeta.data.settings.epilepsy){ctx.shadowBlur=26;ctx.shadowColor=e.color}
+    ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle="#111625";ctx.fillRect(-e.r,-e.r-8,e.r*2,4);ctx.fillStyle="#78ffad";ctx.fillRect(-e.r,-e.r-8,e.r*2*Math.max(0,e.hp/e.maxHp),4);
+    if(e.type==="shooter"||e.type==="boss"){ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,0,e.r*.25,0,Math.PI*2);ctx.fill()}
+    ctx.restore();
+  }
+
+  if(player.sawCount){
+    for(let i=0;i<player.sawCount;i++){
+      const a=gameTime*1.7+i*Math.PI*2/Math.max(1,player.sawCount),sx=player.x+Math.cos(a)*58,sy=player.y+Math.sin(a)*58;
+      ctx.save();ctx.translate(sx,sy);ctx.rotate(gameTime*2);ctx.fillStyle="#d8e7ff";ctx.beginPath();
+      for(let k=0;k<8;k++){const aa=k*Math.PI/4;const rr=k%2?7:12;const px=Math.cos(aa)*rr,py=Math.sin(aa)*rr;if(k===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath();ctx.fill();ctx.restore();
+    }
+  }
+
+  ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.angle); if(!WattMeta.data.settings.epilepsy){ctx.shadowBlur=28;ctx.shadowColor=WattMeta.data.settings.accent}
+  if(player.invuln>0&&Math.floor(gameTime*14)%2)ctx.globalAlpha=.45;
+  if(characterImage){
+    ctx.save();
+    ctx.beginPath();
+    if(WattMeta.data.settings.shape==="square")ctx.rect(-20,-20,40,40);
+    else if(WattMeta.data.settings.shape==="triangle"){ctx.moveTo(0,-21);ctx.lineTo(20,18);ctx.lineTo(-20,18);ctx.closePath()}
+    else ctx.arc(0,0,20,0,Math.PI*2);
+    ctx.clip();ctx.drawImage(characterImage,-20,-20,40,40);ctx.restore();
+    ctx.strokeStyle=WattMeta.data.settings.accent;ctx.lineWidth=2;ctx.beginPath();
+    if(WattMeta.data.settings.shape==="square")ctx.rect(-21,-21,42,42);
+    else if(WattMeta.data.settings.shape==="triangle"){ctx.moveTo(0,-22);ctx.lineTo(21,19);ctx.lineTo(-21,19);ctx.closePath()}
+    else ctx.arc(0,0,21,0,Math.PI*2);ctx.stroke();
+  }else{
+    ctx.fillStyle=WattMeta.data.settings.accent;
+    ctx.beginPath();
+    if(WattMeta.data.settings.shape==="square")ctx.rect(-19,-19,38,38);
+    else if(WattMeta.data.settings.shape==="triangle"){ctx.moveTo(0,-21);ctx.lineTo(20,18);ctx.lineTo(-20,18);ctx.closePath()}
+    else ctx.arc(0,0,19,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle="#f2f8ff";ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(9,9);ctx.lineTo(0,5);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();
+  }
+  ctx.shadowBlur=0;ctx.restore();
+
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];ctx.globalAlpha=Math.max(0,p.life/p.max);
+    if(p.text){ctx.fillStyle=p.color;ctx.font="900 13px "+getComputedStyle(document.body).fontFamily;ctx.textAlign="center";ctx.fillText(p.text,p.x,p.y)}
+    else{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill()}
+  }
+  ctx.globalAlpha=1;ctx.restore();
+}
+function loop(t){
+  if(!running)return;
+  const dt=Math.min(.033,Math.max(.001,(t-last)/1000));last=t;
+  if(!paused&&!choosing)update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+function gameOver(){
+  running=false;attackHeld=false;$("#controls").classList.add("hidden");$("#hud").classList.add("hidden");$("#pauseBtn").classList.add("hidden");$("#tutorialPanel").classList.add("hidden");
+  best=Math.max(best,wave);WattMeta.setBest(best);
+  WattMeta.data.totalRuns++;WattMeta.data.rewardedRuns++;WattMeta.data.highestWave=Math.max(WattMeta.data.highestWave,wave);
+  const reward=WattMeta.reward(wave);WattMeta.data.money+=reward;WattMeta.save();
+  $("#finalStats").innerHTML=`Wave reached: <b>${wave}</b><br>Level: <b>${player.level}</b><br>Enemies defeated: <b>${player.kills}</b><br>Run reward: <b>${reward}</b>`;
+  $("#over").classList.remove("hidden");$("#bestTxt").textContent="Best Wave: "+best;renderAchievements();window.__wattScheduleSync?.();
+}
+
+function advanceTutorial(fromWave=false){
+  if(!tutorial)return;
+  if(tutorialStep<4){tutorialStep++;setTutorialStep(tutorialStep)}
+  else if(fromWave){tutorialStep=4;setTutorialStep(4)}
+}
+function setTutorialStep(step){
+  const titles=["MOVE","ATTACK","DASH","NOVA","POWER"];
+  const texts=[
+    "Drag the left joystick to move.",
+    "Hold ATTACK to fire at the nearest enemy.",
+    "Press DASH while moving.",
+    "Press NOVA when enemies are nearby.",
+    "Collect Mana and choose a power."
+  ];
+  $("#tutorialStepTitle").textContent=titles[step]||"PLAY";
+  $("#tutorialStepText").textContent=texts[step]||"Keep going.";
+}
+function finishTutorial(){
+  if(!tutorial)return;
+  tutorial=false;
+  running=false;
+  paused=false;
+  choosing=false;
+  attackHeld=false;
+  joy.id=null;joy.x=joy.y=0;
+  WattMeta.data.money+=5;
+  WattMeta.save();
+  $("#tutorialPanel").classList.add("hidden");
+  $("#hud").classList.add("hidden");
+  $("#controls").classList.add("hidden");
+  $("#pauseBtn").classList.add("hidden");
+  $("#menu").classList.remove("hidden");
+  $("#bestTxt").textContent="Best Wave: "+best;
+  say("Tutorial complete! +5 coins");
+}
+function tutorialDone(){tutorial=false;$("#tutorialPanel").classList.add("hidden")}
+
+const jb=$("#joyBase"),jk=$("#joyKnob");
+function joyMove(e){
+  if(joy.id!==e.pointerId)return;
+  const r=jb.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let dx=e.clientX-cx,dy=e.clientY-cy,m=Math.hypot(dx,dy),max=r.width*.34;
+  if(m>max){dx=dx/m*max;dy=dy/m*max}
+  jk.style.transform=`translate(${dx}px,${dy}px)`;joy.x=dx/max;joy.y=dy/max;
+  if(tutorial&&tutorialStep===0&&m>8){advanceTutorial()}
+}
+jb.onpointerdown=e=>{joy.id=e.pointerId;jb.setPointerCapture(e.pointerId);joyMove(e)};
+jb.onpointermove=joyMove;
+jb.onpointerup=jb.onpointercancel=e=>{if(joy.id===e.pointerId){joy.id=null;joy.x=joy.y=0;jk.style.transform=""}};
+$("#attack").onpointerdown=e=>{attackHeld=true;fire();e.preventDefault();if(tutorial&&tutorialStep===1)advanceTutorial()};
+$("#attack").onpointerup=$("#attack").onpointercancel=()=>attackHeld=false;
+$("#dash").onpointerdown=e=>{e.preventDefault();e.stopPropagation();dash();if(tutorial&&tutorialStep===2)advanceTutorial()};
+$("#special").onpointerdown=e=>{e.preventDefault();e.stopPropagation();nova();if(tutorial&&tutorialStep===3)advanceTutorial()};
+$("#pauseBtn").onclick=()=>{paused=true;$("#pause").classList.remove("hidden");$("#controls").classList.add("hidden");updatePause()};
+$("#resumeBtn").onclick=()=>{paused=false;$("#pause").classList.add("hidden");$("#controls").classList.remove("hidden");last=performance.now()};
+$("#quitBtn").onclick=backToMenu;
+$("#startBtn").onclick=()=>startRun(false);
+$("#againBtn").onclick=()=>startRun(false);
+$("#menuBtn").onclick=backToMenu;
+$("#tutorialStart").onclick=()=>startRun(true);
+$("#howBtn").onclick=()=>{$("#menu").classList.add("hidden");$("#how").classList.remove("hidden")};
+
+function updatePause(){
+  const names=[];
+  for(const id in player.powerLevels){const u=upgrades.find(x=>x.id===id);if(u)names.push(`${u.name} Lv.${player.powerLevels[id]}`)}
+  $("#pauseStats").innerHTML=`HP: ${Math.ceil(player.hp)} / ${Math.ceil(player.maxHp)}<br>Level: ${player.level}<br>Enemies: ${player.kills}<br>Mana: ${Math.floor(player.mana)} / ${player.nextMana}`;
+  $("#pausePowerList").innerHTML=names.length?names.map(n=>`<div>${n}</div>`).join(""):"No powers yet.";
+}
+
+document.querySelectorAll(".metaClose").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    backToMenu();
+  });
+});
+
+const shopCatalog=upgrades.filter(u=>u.shop>0);
+function openShop(){
+  backToMenu();$("#menu").classList.add("hidden");$("#shop").classList.remove("hidden");
+  $("#shopMoney").textContent="Credits: "+WattMeta.data.money;
+  const box=$("#shopCards");box.innerHTML="";
+  shopCatalog.forEach(u=>{
+    const owned=WattMeta.data.unlocked.includes(u.id),el=document.createElement("button");el.className="card";
+    el.innerHTML=`<b style="color:${RARITY_COLORS[u.rarity]}">${u.name}</b><span>${RARITY_NAMES[u.rarity]} • ${u.desc}</span><br><span style="color:#f3cf73;font-weight:900">${owned?"UNLOCKED":u.shop+" CREDITS"}</span>`;
+    el.onclick=()=>{
+      if(owned)return;
+      if(WattMeta.data.money<u.shop){say("Not enough credits");return}
+      WattMeta.data.money-=u.shop;WattMeta.data.unlocked.push(u.id);if(!WattMeta.data.seen.includes(u.id))WattMeta.data.seen.push(u.id);
+      WattMeta.data.shopBuys++;WattMeta.save();openShop();
+    };
+    box.appendChild(el);
+  });
+}
+function openDex(){
+  backToMenu();$("#menu").classList.add("hidden");$("#dex").classList.remove("hidden");
+  const box=$("#dexCards");box.innerHTML="";
+  const groups=RARITIES.map(r=>({r,items:upgrades.filter(u=>u.rarity===r)}));
+  groups.forEach(g=>{
+    const header=document.createElement("div");header.style.cssText="width:100%;max-width:470px;margin:12px 0 2px;text-align:left;font-weight:900;color:"+RARITY_COLORS[g.r];
+    header.textContent=RARITY_NAMES[g.r];box.appendChild(header);
+    g.items.forEach(u=>{
+      const known=u.shop===0||WattMeta.data.seen.includes(u.id),el=document.createElement("div");el.className="card";
+      el.innerHTML=`<b style="color:${RARITY_COLORS[g.r]}">${known?u.name:"?"}</b><span>${known?u.desc:"Unknown power"}</span>`;
+      box.appendChild(el);
+    });
+  });
+}
+$("#shopBtn").onclick=openShop;$("#dexBtn").onclick=openDex;
+
+function renderAchievements(){
+  const box=$("#achievementCards");if(!box)return;box.innerHTML="";
+  const d=WattMeta.data;
+  const defs=[
+    ["first","First Voltage","Finish your first run.",()=>d.totalRuns>=1],
+    ["wave10","Into the Rift","Reach Wave 10.",()=>d.highestWave>=10],
+    ["wave20","Cave Exit","Reach Wave 20.",()=>d.highestWave>=20],
+    ["wave50","Moonwalker","Reach Wave 50.",()=>d.highestWave>=50],
+    ["wave80","Magma Witness","Reach Wave 80.",()=>d.highestWave>=80],
+    ["wave100","Lost City","Reach Wave 100.",()=>d.highestWave>=100],
+    ["wave120","Royal Gate","Reach Wave 120.",()=>d.highestWave>=120],
+    ["wave150","Meet Neptune","Reach Wave 150.",()=>d.highestWave>=150],
+    ["wave160","Break the Seal","Reach Wave 160.",()=>d.highestWave>=160],
+    ["wave200","Temple Keeper","Reach Wave 200.",()=>d.highestWave>=200],
+    ["wave220","Arrow Legacy","Reach Wave 220.",()=>d.highestWave>=220],
+    ["wave250","Artemis","Reach Wave 250.",()=>d.highestWave>=250],
+    ["loop1","Neon Loop","Reach Wave 251.",()=>d.highestWave>=251],
+    ["kills100","Hundred Down","Defeat 100 enemies.",()=>d.totalKills>=100],
+    ["kills500","Half Thousand","Defeat 500 enemies.",()=>d.totalKills>=500],
+    ["kills1000","Thousand Sparks","Defeat 1,000 enemies.",()=>d.totalKills>=1000],
+    ["mana1000","Mana Collector","Collect 1,000 Mana.",()=>d.totalMana>=1000],
+    ["mana10000","Mana Flood","Collect 10,000 Mana.",()=>d.totalMana>=10000],
+    ["up10","Build Up","Pick 10 upgrades.",()=>d.upgradePicks>=10],
+    ["up25","Build Master","Pick 25 upgrades.",()=>d.upgradePicks>=25],
+    ["up50","Build Archivist","Pick 50 upgrades.",()=>d.upgradePicks>=50],
+    ["shop5","First Shopping Spree","Unlock 5 shop powers.",()=>d.shopBuys>=5],
+    ["shop15","Power Investor","Unlock 15 shop powers.",()=>d.shopBuys>=15],
+    ["nova25","Nova Habit","Use Nova 25 times.",()=>d.novaUses>=25],
+    ["nova100","Nova Storm","Use Nova 100 times.",()=>d.novaUses>=100],
+    ["dash50","Phase Runner","Dash 50 times.",()=>d.dashUses>=50],
+    ["nohit10","Untouched","Clear 10 waves without taking damage.",()=>d.noHitWaves>=10],
+    ["credits1000","Pocket Reactor","Hold 1,000 credits.",()=>d.money>=1000],
+    ["credits10000","Deep Reserves","Hold 10,000 credits.",()=>d.money>=10000],
+    ["mythic","Beyond Mythic","Unlock a mythic power.",()=>d.unlocked.some(id=>["ultra","infinity","voidCrown"].includes(id))]
+  ];
+  defs.forEach(([id,name,desc,fn])=>{
+    const done=d.achievements.includes(id)||fn();
+    if(done&&!d.achievements.includes(id)){d.achievements.push(id);WattMeta.save()}
+    const el=document.createElement("div");el.className="card";
+    el.innerHTML=`<b>${done?"✓":"○"} ${name}</b><span>${desc}</span>`;box.appendChild(el);
+  });
+}
+$("#achievementBtn").onclick=()=>{backToMenu();$("#menu").classList.add("hidden");$("#achievements").classList.remove("hidden");renderAchievements()};
+
+function openSettings(){backToMenu();$("#menu").classList.add("hidden");$("#settings").classList.remove("hidden");applySettings()}
+$("#settingsBtn").onclick=openSettings;
+$("#buttonSize").oninput=e=>{WattMeta.data.settings.buttonScale=+e.target.value/100;applySettings();WattMeta.save()};
+$("#rotateToggle").onchange=e=>{WattMeta.data.settings.rotate=e.target.checked;WattMeta.save()};
+$("#epilepsyToggle").onchange=e=>{WattMeta.data.settings.epilepsy=e.target.checked;applySettings();WattMeta.save()};
+$("#accentColor").oninput=e=>{WattMeta.data.settings.accent=e.target.value;applySettings();WattMeta.save()};
+$("#charShape").onchange=e=>{WattMeta.data.settings.shape=e.target.value;WattMeta.save()};
+$("#resetSettings").onclick=resetSettings;
+$("#removeChar").onclick=()=>{WattMeta.data.settings.charImage="";characterImage=null;WattMeta.save();drawSettingsPreview()};
+$("#charFile").onchange=e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const im=new Image();im.onload=()=>{
+      const size=128,oc=document.createElement("canvas");oc.width=size;oc.height=size;const o=oc.getContext("2d");
+      const scale=Math.max(size/im.width,size/im.height),w=im.width*scale,h=im.height*scale,dx=(size-w)/2,dy=(size-h)/2;
+      o.drawImage(im,dx,dy,w,h);
+      WattMeta.data.settings.charImage=oc.toDataURL("image/png");WattMeta.save();loadCharacterImage(WattMeta.data.settings.charImage);drawSettingsPreview();
+    };im.src=rd.result;
+  };rd.readAsDataURL(f);
+};
+
+document.addEventListener("visibilitychange",()=>{if(document.hidden){last=performance.now();sendWattStats()}});window.addEventListener("pagehide",sendWattStats);
+loadCharacterImage(WattMeta.data.settings.charImage||"");
+applySettings();
+$("#bestTxt").textContent="Best Wave: "+best;
+})();
+</script>
+</body>
+</html>
